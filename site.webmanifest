@@ -1,0 +1,9 @@
+{
+  "name": "Divine Pet Clinic",
+  "short_name": "Divine",
+  "start_url": "/index.html",
+  "display": "standalone",
+  "background_color": "#FFFFFF",
+  "theme_color": "#006D70",
+  "icons": [{ "src": "favicon.svg", "sizes": "any", "type": "image/svg+xml" }]
+}
