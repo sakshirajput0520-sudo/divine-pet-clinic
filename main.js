@@ -66,16 +66,31 @@ $$(".split").forEach(el => {
 if (SS.getItem("dpcSeen") || !$("#loader")) { $("#loader") && $("#loader").remove(); document.body.classList.remove("loading"); requestAnimationFrame(() => document.body.classList.add("ready")); }
 else (function () {
   SS.setItem("dpcSeen", "1");
-  const t0 = performance.now(), dur = reduce ? 100 : 1800, txt = $("#ldTxt");
+  const L = $("#loader"), svg = $("#ecg"), P = $("#ecgP"), G = $("#ecgG"), Hd = $("#ecgH"), D = $("#ldD"), T = $("#ldT"), txt = $("#ldTxt");
+  const W = innerWidth, H = innerHeight, S = Math.min(150, W * .34), s = S / 100, cx = W / 2, cy = H / 2 - 24;
+  const X = x => cx + (x - 50) * s, Y = y => cy + (y - 52) * s;
+  svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+  const d = `M0 ${cy} H${X(28)} L${X(33)} ${Y(41)} L${X(39)} ${Y(63)} L${X(45)} ${Y(33)} L${X(50)} ${Y(52)} H${W}`;
+  P.setAttribute("d", d); G.setAttribute("d", d);
+  Object.assign(D.style, { left: X(0) + "px", top: Y(0) + "px", width: S + "px", height: S + "px" });
+  T.style.top = (Y(100) + 26) + "px";
+  const len = P.getTotalLength(); [P, G].forEach(p => { p.style.strokeDasharray = len; p.style.strokeDashoffset = len; });
+  const say = m => { if (txt.textContent === m) return; txt.classList.add("sw"); setTimeout(() => { txt.textContent = m; txt.classList.remove("sw"); }, 220); };
+  const ease = k => k < .5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2;
+  const dur = reduce ? 1 : 1700, t0 = performance.now();
   (function f(t) {
-    const k = clamp((t - t0) / dur);
-    txt.textContent = k < 1 ? `SCANNING · ${Math.round(k * 100)}%` : "ALL VITALS HAPPY ✓";
-    if (k < 1) return requestAnimationFrame(f);
+    const r = clamp((t - t0) / dur), k = reduce ? 1 : ease(r), at = len * k, pt = P.getPointAtLength(at);
+    [P, G].forEach(p => p.style.strokeDashoffset = len - at);
+    Hd.setAttribute("cx", pt.x); Hd.setAttribute("cy", pt.y);
+    D.style.clipPath = `inset(0 ${100 - clamp((pt.x - X(0)) / S) * 100}% 0 0)`;
+    if (r > .5) say("HEART RATE · HAPPY");
+    if (r < 1) return requestAnimationFrame(f);
+    Hd.style.opacity = 0; say("ALL SYSTEMS PAWSOME ✓"); L.classList.add("beat");
     setTimeout(() => {
-      $("#loader").classList.add("out"); document.body.classList.remove("loading");
-      setTimeout(() => document.body.classList.add("ready"), 120);
-      setTimeout(() => $("#loader").remove(), 1100);
-    }, 350);
+      L.classList.add("out"); document.body.classList.remove("loading");
+      setTimeout(() => document.body.classList.add("ready"), 150);
+      setTimeout(() => L.remove(), 1000);
+    }, reduce ? 200 : 900);
   })(t0);
 })();
 
@@ -371,6 +386,7 @@ $$(".bt").forEach(t => {
     T("#vbadge", b => { b.classList.toggle("off", !on); $(".vt", b).textContent = on ? "Vet online" : "Vet offline"; $(".vc", b).textContent = on ? "Consult now" : "Book later"; b.href = on ? (consultUrl || consultLocal) : book; if (on && consultUrl) { b.target = "_blank"; b.rel = "noopener"; } else b.removeAttribute("target"); });
     T(".cstatus", c => { c.classList.toggle("off", !on); $(".cs-t", c).textContent = on ? "Dr. Saini is online now" : `Dr. Saini is offline · back at ${back}`; });
     T("#cMain", m => { m.classList.toggle("off", !on); $(".cm-t", m).textContent = on ? "🎥 Consult now on Swoofi" : "📅 Book for later"; m.href = on ? (consultUrl || appUrl || book) : book; if (on && (consultUrl || appUrl)) { m.target = "_blank"; m.rel = "noopener"; } else m.removeAttribute("target"); });
+    T("#mmLive", m => { m.classList.toggle("off", !on); $("b", m).textContent = on ? "Vet online now" : "Vet offline"; $("small", m).textContent = on ? "Video consult · replies in minutes" : `Back at ${back} · book a visit instead`; m.setAttribute("href", on ? consultLocal : book); });
     T("#tbConsult", tb => { tb.classList.toggle("off", !on); $("em", tb).textContent = on ? "Consult" : "Book later"; tb.setAttribute("href", on ? consultLocal : book); });
     T(".vphone", v => { v.classList.toggle("off", !on); $(".vo-t").textContent = `Back online at ${back}`; $(".vl-t").textContent = on ? "LIVE" : "AWAY"; });
   }
