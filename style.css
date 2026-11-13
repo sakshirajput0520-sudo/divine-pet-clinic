@@ -905,3 +905,13 @@ body.page-enter .curtain{transform:translateY(0)}
 .menu-open .tabbar{transform:translateY(220%);transition:transform .5s var(--ease)}
 .tabbar{transition:transform .5s var(--ease)}
 @media (min-width:1081px){.mmenu{display:none}}
+
+/* ---------- Swoofi store chooser (desktop) ---------- */
+.storepop{position:absolute;left:0;top:calc(100% + 12px);z-index:30;width:330px;padding:16px;border-radius:20px;background:#fff;border:1px solid var(--line);box-shadow:0 24px 50px -18px rgba(3,54,58,.45);opacity:0;transform:translateY(-8px) scale(.97);transform-origin:top left;pointer-events:none;transition:opacity .25s,transform .35s var(--ease)}
+.storepop.on{opacity:1;transform:none;pointer-events:auto}
+.storepop>b{display:block;font-size:1rem}.storepop>small{display:block;color:var(--muted);font-size:.8rem;margin:2px 0 12px}
+.sp-btns{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.sp-btns a{display:flex;align-items:center;gap:8px;padding:9px 10px;border-radius:12px;background:#0B0B0F;color:#fff;transition:transform .3s var(--ease),background .3s}
+.sp-btns a:hover{transform:translateY(-2px);background:var(--t4)}
+.sp-btns span{font-size:1rem;width:20px;text-align:center}
+.sp-btns em{font-style:normal;font-size:.52rem;letter-spacing:.06em;line-height:1.15}.sp-btns em b{display:block;font-size:.92rem;letter-spacing:0}

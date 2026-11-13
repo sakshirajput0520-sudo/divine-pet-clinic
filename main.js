@@ -8,8 +8,10 @@ const CONFIG = {
   whatsapp: "",     // e.g. "919876543210"   → chat booking + WhatsApp button send here
   doctorPhoto: "",  // e.g. "dr-saini.jpg"   → photo on the swinging ID badge
   /* Online consultation via the Swoofi app */
-  swoofiConsultUrl: "",   // link that opens Dr. Saini's consult page in the Swoofi app / website
-  swoofiAppUrl: "",       // link to download the Swoofi app (Play Store / App Store / smart link)
+  swoofiConsultUrl: "https://swoofi.app",  // Swoofi website / consult page. Android opens the Swoofi app if installed (verified App Link), iPhone via Universal Link, else the website
+  swoofiAndroidPackage: "com.swoofi.swoofi",
+  playStoreUrl: "https://play.google.com/store/apps/details?id=com.swoofi.swoofi",
+  appStoreUrl: "https://apps.apple.com/in/app/swoofi/id6740190251",
   consultHours: [9, 21],  // vet is "online" between these hours, India time (9 AM – 9 PM)
   vetOnline: null,        // set true / false to force the status, or null to follow consultHours
   mapsUrl: "https://www.google.com/maps/search/?api=1&query=Divine+Pet+Clinic+Palam+Vihar+Pakhowal+Road+Ludhiana"
@@ -368,6 +370,30 @@ $$(".bt").forEach(t => {
   t.addEventListener("pointermove", e => { const r = t.getBoundingClientRect(); t.style.setProperty("--mx", ((e.clientX - r.left) / r.width - .5) * 2); t.style.setProperty("--my", ((e.clientY - r.top) / r.height - .5) * 2); });
   t.addEventListener("pointerleave", () => { t.style.setProperty("--mx", 0); t.style.setProperty("--my", 0); });
 });
+
+/* ============ SWOOFI: open app / website / store by device ============ */
+const DEV = (() => { const ua = navigator.userAgent || ""; const ios = /iPhone|iPad|iPod/i.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1); const android = /Android/i.test(ua); return { ios, android, mobile: ios || android }; })();
+function swoofiConsultLink() {
+  const web = CONFIG.swoofiConsultUrl;
+  if (DEV.android && CONFIG.swoofiAndroidPackage) {
+    try { const u = new URL(web); return `intent://${u.host}${u.pathname}${u.search}#Intent;scheme=https;package=${CONFIG.swoofiAndroidPackage};S.browser_fallback_url=${encodeURIComponent(web)};end`; } catch (e) { return web; }
+  }
+  return web; /* iPhone: Universal Link opens the app if installed, else Safari shows the site. Desktop: website */
+}
+function wireSwoofiApp(a) {
+  if (!a) return;
+  if (DEV.ios) { a.href = CONFIG.appStoreUrl; a.removeAttribute("target"); return; }
+  if (DEV.android) { a.href = CONFIG.playStoreUrl; a.removeAttribute("target"); return; }
+  /* desktop: small chooser with both stores */
+  const wrap = a.parentElement; wrap.style.position = "relative";
+  const pop = document.createElement("div"); pop.className = "storepop"; pop.setAttribute("role", "dialog"); pop.setAttribute("aria-label", "Download the Swoofi app");
+  pop.innerHTML = `<b>Get Swoofi on your phone</b><small>Free · Android & iPhone</small><div class="sp-btns"><a href="${CONFIG.playStoreUrl}" target="_blank" rel="noopener"><span>▶</span><em>GET IT ON<b>Google Play</b></em></a><a href="${CONFIG.appStoreUrl}" target="_blank" rel="noopener"><span>●</span><em>DOWNLOAD ON THE<b>App Store</b></em></a></div>`;
+  wrap.appendChild(pop);
+  a.href = CONFIG.playStoreUrl; a.setAttribute("aria-haspopup", "dialog");
+  a.addEventListener("click", e => { e.preventDefault(); e.stopPropagation(); pop.style.left = a.offsetLeft + "px"; pop.classList.toggle("on"); });
+  document.addEventListener("click", e => { if (!pop.contains(e.target)) pop.classList.remove("on"); });
+  document.addEventListener("keydown", e => { if (e.key === "Escape") pop.classList.remove("on"); });
+}
 /* ============ VET ONLINE STATUS (badge + consult section) ============ */
 (function () {
   const fmtH = h => { const hh = Math.floor(h), mm = Math.round((h - hh) * 60), am = hh < 12 || hh === 24; return `${((hh + 11) % 12) + 1}:${String(mm).padStart(2, "0")} ${am ? "AM" : "PM"}`; };
@@ -376,8 +402,8 @@ $$(".bt").forEach(t => {
     const ist = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" })), h = ist.getHours() + ist.getMinutes() / 60;
     const [a, b] = CONFIG.consultHours; return a <= b ? h >= a && h < b : h >= a || h < b;
   }
-  const consultUrl = CONFIG.swoofiConsultUrl, appUrl = CONFIG.swoofiAppUrl;
-  if (appUrl && $("#cApp")) { const a = $("#cApp"); a.href = appUrl; a.target = "_blank"; a.rel = "noopener"; }
+  const consultUrl = "";
+  wireSwoofiApp($("#cApp"));
   let secs = 0;
   const T = (sel, fn) => { const el = $(sel); if (el) fn(el); };
   function apply() {
@@ -385,7 +411,7 @@ $$(".bt").forEach(t => {
     const book = "contact.html#book", consultLocal = $("#consult") ? "#consult" : "services.html#consult";
     T("#vbadge", b => { b.classList.toggle("off", !on); $(".vt", b).textContent = on ? "Vet online" : "Vet offline"; $(".vc", b).textContent = on ? "Consult now" : "Book later"; b.href = on ? (consultUrl || consultLocal) : book; if (on && consultUrl) { b.target = "_blank"; b.rel = "noopener"; } else b.removeAttribute("target"); });
     T(".cstatus", c => { c.classList.toggle("off", !on); $(".cs-t", c).textContent = on ? "Dr. Saini is online now" : `Dr. Saini is offline · back at ${back}`; });
-    T("#cMain", m => { m.classList.toggle("off", !on); $(".cm-t", m).textContent = on ? "🎥 Consult now on Swoofi" : "📅 Book for later"; m.href = on ? (consultUrl || appUrl || book) : book; if (on && (consultUrl || appUrl)) { m.target = "_blank"; m.rel = "noopener"; } else m.removeAttribute("target"); });
+    T("#cMain", m => { m.classList.toggle("off", !on); $(".cm-t", m).textContent = on ? "🎥 Consult now on Swoofi" : "📅 Book for later"; m.href = on ? swoofiConsultLink() : book; if (on && !DEV.mobile) { m.target = "_blank"; m.rel = "noopener"; } else m.removeAttribute("target"); });
     T("#mmLive", m => { m.classList.toggle("off", !on); $("b", m).textContent = on ? "Vet online now" : "Vet offline"; $("small", m).textContent = on ? "Video consult · replies in minutes" : `Back at ${back} · book a visit instead`; m.setAttribute("href", on ? consultLocal : book); });
     T("#tbConsult", tb => { tb.classList.toggle("off", !on); $("em", tb).textContent = on ? "Consult" : "Book later"; tb.setAttribute("href", on ? consultLocal : book); });
     T(".vphone", v => { v.classList.toggle("off", !on); $(".vo-t").textContent = `Back online at ${back}`; $(".vl-t").textContent = on ? "LIVE" : "AWAY"; });
