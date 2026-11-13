@@ -849,3 +849,5 @@ body.page-enter .curtain{transform:translateY(0)}
   .hero h1{font-size:2.4rem}
   .vbadge .vc{padding:.3rem .55rem;font-size:.7rem}
 }
+
+.chead .av svg{--cut:var(--t2)}.phead .av svg{--cut:#fff}
